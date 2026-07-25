@@ -1,8 +1,4 @@
-import axios from "axios";
-
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
-const TMDB_TOKEN = import.meta.env.VITE_TMDB_TOKEN as string | undefined;
 
 export type MovieCategory = "trending" | "popular" | "top-rated" | "upcoming";
 
@@ -142,94 +138,44 @@ export interface PaginatedMovies {
   total_results: number;
 }
 
-interface MultiSearchResponse {
-  page: number;
-  results: Array<SearchResult | { id: number; media_type: "tv" }>;
-  total_pages: number;
-  total_results: number;
+interface CatalogEnvelope<T> {
+  data?: T;
+  error?: string;
 }
 
-interface CreditsResponse {
-  cast: CastMember[];
-  crew: CrewMember[];
-}
+async function catalogRequest<T>(
+  params: Record<string, string | number>,
+): Promise<T> {
+  const query = new URLSearchParams(
+    Object.entries(params).map(([key, value]) => [key, String(value)]),
+  );
+  const response = await fetch(`/api/catalog?${query.toString()}`, {
+    headers: { Accept: "application/json" },
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | CatalogEnvelope<T>
+    | null;
 
-interface VideosResponse {
-  results: MovieVideo[];
-}
+  if (!response.ok || !payload?.data) {
+    throw new Error(payload?.error || "Reevu's movie catalog is unavailable.");
+  }
 
-interface RecommendationsResponse {
-  results: Movie[];
-}
-
-interface WatchProvidersResponse {
-  results: Record<string, WatchRegion>;
-}
-
-interface PersonMovieCreditsResponse {
-  cast: Movie[];
-}
-
-export const tmdbApi = axios.create({
-  baseURL: TMDB_BASE_URL,
-  headers: {
-    Authorization: `Bearer ${TMDB_TOKEN ?? ""}`,
-    Accept: "application/json",
-  },
-});
-
-function apiParams(extra: Record<string, string | number | boolean> = {}) {
-  return {
-    language: "en-US",
-    include_adult: false,
-    ...extra,
-  };
-}
-
-export function hasTmdbToken(): boolean {
-  return Boolean(TMDB_TOKEN && TMDB_TOKEN !== "YOUR_TMDB_READ_ACCESS_TOKEN_HERE");
+  return payload.data;
 }
 
 export async function getHomeMovies(): Promise<HomeMovies> {
-  const [trending, popular, topRated, upcoming] = await Promise.all([
-    tmdbApi.get<PaginatedMovies>("/trending/movie/week", {
-      params: apiParams(),
-    }),
-    tmdbApi.get<PaginatedMovies>("/movie/popular", {
-      params: apiParams({ region: "IN" }),
-    }),
-    tmdbApi.get<PaginatedMovies>("/movie/top_rated", {
-      params: apiParams({ region: "IN" }),
-    }),
-    tmdbApi.get<PaginatedMovies>("/movie/upcoming", {
-      params: apiParams({ region: "IN" }),
-    }),
-  ]);
-
-  return {
-    trending: trending.data.results,
-    popular: popular.data.results,
-    topRated: topRated.data.results,
-    upcoming: upcoming.data.results,
-  };
+  return catalogRequest<HomeMovies>({ resource: "home" });
 }
 
 export async function getCategoryMovies(
   category: MovieCategory,
   page = 1,
 ): Promise<PaginatedMovies> {
-  const endpoint: Record<MovieCategory, string> = {
-    trending: "/trending/movie/week",
-    popular: "/movie/popular",
-    "top-rated": "/movie/top_rated",
-    upcoming: "/movie/upcoming",
-  };
-
-  const response = await tmdbApi.get<PaginatedMovies>(endpoint[category], {
-    params: apiParams({ page, region: "IN" }),
+  return catalogRequest<PaginatedMovies>({
+    resource: "category",
+    category,
+    page,
   });
-
-  return response.data;
 }
 
 export async function searchMulti(query: string, page = 1): Promise<SearchResult[]> {
@@ -239,64 +185,19 @@ export async function searchMulti(query: string, page = 1): Promise<SearchResult
     return [];
   }
 
-  const response = await tmdbApi.get<MultiSearchResponse>("/search/multi", {
-    params: apiParams({ query: normalizedQuery, page }),
+  return catalogRequest<SearchResult[]>({
+    resource: "search",
+    q: normalizedQuery,
+    page,
   });
-
-  return response.data.results.filter(
-    (result): result is SearchResult =>
-      result.media_type === "movie" || result.media_type === "person",
-  );
 }
 
 export async function getMoviePageData(movieId: string): Promise<MoviePageData> {
-  const [movie, credits, videos, recommendations, watchProviders] =
-    await Promise.all([
-      tmdbApi.get<MovieDetails>(`/movie/${movieId}`, {
-        params: apiParams(),
-      }),
-      tmdbApi.get<CreditsResponse>(`/movie/${movieId}/credits`, {
-        params: apiParams(),
-      }),
-      tmdbApi.get<VideosResponse>(`/movie/${movieId}/videos`, {
-        params: apiParams(),
-      }),
-      tmdbApi.get<RecommendationsResponse>(`/movie/${movieId}/recommendations`, {
-        params: apiParams(),
-      }),
-      tmdbApi.get<WatchProvidersResponse>(`/movie/${movieId}/watch/providers`),
-    ]);
-
-  return {
-    movie: movie.data,
-    cast: credits.data.cast.slice(0, 18),
-    crew: credits.data.crew,
-    videos: videos.data.results,
-    recommendations: recommendations.data.results.slice(0, 16),
-    watchProviders: watchProviders.data.results,
-  };
+  return catalogRequest<MoviePageData>({ resource: "movie", id: movieId });
 }
 
 export async function getPersonPageData(personId: string): Promise<PersonPageData> {
-  const [person, credits] = await Promise.all([
-    tmdbApi.get<PersonDetails>(`/person/${personId}`, {
-      params: apiParams(),
-    }),
-    tmdbApi.get<PersonMovieCreditsResponse>(`/person/${personId}/movie_credits`, {
-      params: apiParams(),
-    }),
-  ]);
-
-  const uniqueMovies = Array.from(
-    new Map(credits.data.cast.map((movie) => [movie.id, movie])).values(),
-  )
-    .filter((movie) => movie.poster_path)
-    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-
-  return {
-    person: person.data,
-    movies: uniqueMovies.slice(0, 30),
-  };
+  return catalogRequest<PersonPageData>({ resource: "person", id: personId });
 }
 
 export function isMovieCategory(value: string | undefined): value is MovieCategory {

@@ -14,6 +14,7 @@ import IntroVideo from "@/components/IntroVideo";
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "@/pages/Auth";
 import Browse from "@/pages/Browse";
+import Community from "@/pages/Community";
 import Home from "@/pages/Home";
 import Library from "@/pages/Library";
 import MovieDetails from "@/pages/MovieDetails";
@@ -111,6 +112,7 @@ export default function App() {
         <Route path="/person/:personId" element={<PersonDetails />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/browse/:category" element={<Browse />} />
+        <Route path="/community" element={<Community />} />
         <Route
           path="/library"
           element={

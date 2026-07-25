@@ -11,25 +11,31 @@ the steps below once for email OTP, Google login, profiles, ratings, and reviews
 4. Fill in Reevu's `.env` file:
 
 ```env
-VITE_TMDB_TOKEN=your_tmdb_read_access_token
+TMDB_TOKEN=your_tmdb_read_access_token
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your_supabase_publishable_or_anon_key
+SUPABASE_SECRET_KEY=your_server_only_supabase_secret_key
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_ANON_KEY=your_supabase_publishable_or_anon_key
 ```
 
-Restart Vite after changing `.env`. Never put a Supabase service-role key or
-Google client secret in a Vite environment variable.
+`SUPABASE_SECRET_KEY` is used only by the server-side Reevu catalog function.
+Never prefix it with `VITE_` and never expose it to browser code.
 
-## 2. Create the profile and review tables
+## 2. Create the Reevu platform tables
 
 In **Supabase Dashboard -> SQL Editor**, run these files in this order:
 
 1. `SUPABASE_PROFILES.sql`
 2. `SUPABASE_REVIEWS.sql`
+3. `SUPABASE_REEVU_PLATFORM.sql`
 
 The first script creates `profiles`, automatically syncs new and updated Auth
 users, backfills existing users, and enables row-level security. The second
-creates Reevu's first-party ratings and reviews table. Users can only write
-their own records.
+creates Reevu's first-party ratings and reviews table. The platform script
+creates the server-owned catalog cache and account-synced favorites/watchlists.
+Users can only write their own library and review records. Browser clients can
+read the public catalog cache but cannot modify it.
 
 ## 3. Configure email OTP
 
