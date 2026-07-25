@@ -61,7 +61,8 @@ export default async function handler(request, response) {
     );
 
     return response.status(upstreamResponse.status).send(body);
-  } catch {
+  } catch (error) {
+    console.error("TMDB proxy request failed", error);
     return response.status(502).json({ error: "TMDB request failed" });
   }
 }
