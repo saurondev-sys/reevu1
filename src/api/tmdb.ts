@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const TMDB_BASE_URL = import.meta.env.PROD
+const IS_PRODUCTION = import.meta.env.PROD;
+const TMDB_BASE_URL = IS_PRODUCTION
   ? "/api/movies"
   : "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -175,10 +176,26 @@ interface PersonMovieCreditsResponse {
 export const tmdbApi = axios.create({
   baseURL: TMDB_BASE_URL,
   headers: {
-    Authorization: `Bearer ${TMDB_TOKEN ?? ""}`,
+    ...(!IS_PRODUCTION && {
+      Authorization: `Bearer ${TMDB_TOKEN ?? ""}`,
+    }),
     Accept: "application/json",
   },
 });
+
+if (IS_PRODUCTION) {
+  tmdbApi.interceptors.request.use((config) => {
+    const path = config.url ?? "";
+
+    config.url = "";
+    config.params = {
+      ...config.params,
+      path,
+    };
+
+    return config;
+  });
+}
 
 function apiParams(extra: Record<string, string | number | boolean> = {}) {
   return {
@@ -189,7 +206,10 @@ function apiParams(extra: Record<string, string | number | boolean> = {}) {
 }
 
 export function hasTmdbToken(): boolean {
-  return Boolean(TMDB_TOKEN && TMDB_TOKEN !== "YOUR_TMDB_READ_ACCESS_TOKEN_HERE");
+  return (
+    IS_PRODUCTION ||
+    Boolean(TMDB_TOKEN && TMDB_TOKEN !== "YOUR_TMDB_READ_ACCESS_TOKEN_HERE")
+  );
 }
 
 export async function getHomeMovies(): Promise<HomeMovies> {

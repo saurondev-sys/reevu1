@@ -2,10 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/api/movies/:path*",
-      "destination": "https://api.themoviedb.org/3/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
