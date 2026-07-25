@@ -10,6 +10,7 @@ const navItems = [
   { label: "Home", to: "/" },
   { label: "Trending", to: "/browse/trending" },
   { label: "Popular", to: "/browse/popular" },
+  { label: "Community", to: "/community" },
 ];
 
 export default function Header() {

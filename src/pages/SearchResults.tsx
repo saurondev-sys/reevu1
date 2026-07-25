@@ -58,7 +58,7 @@ export default function SearchResults() {
 
         {isError && (
           <div className="mt-12 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-200">
-            Search failed. Check your TMDB token and try again.
+            Reevu search is temporarily unavailable. Please try again shortly.
           </div>
         )}
 

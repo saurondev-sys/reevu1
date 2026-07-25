@@ -14,7 +14,7 @@ export function PageLoader({ label = "Loading..." }: { label?: string }) {
 
 export function PageError({
   title = "Something went wrong",
-  message = "We could not load this page. Check your TMDB token and internet connection.",
+  message = "We could not load this page from the Reevu catalog. Please try again shortly.",
 }: {
   title?: string;
   message?: string;

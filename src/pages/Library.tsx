@@ -1,4 +1,11 @@
-import { Bookmark, Heart, Trash2 } from "lucide-react";
+import {
+  Bookmark,
+  Cloud,
+  HardDrive,
+  Heart,
+  LoaderCircle,
+  Trash2,
+} from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
 import MovieCard from "@/components/MovieCard";
@@ -12,6 +19,8 @@ export default function Library() {
     watchlist,
     clearFavorites,
     clearWatchlist,
+    isSyncing,
+    storageMode,
   } = useLibrary();
 
   const movies = activeTab === "favorites" ? favorites : watchlist;
@@ -20,9 +29,20 @@ export default function Library() {
   return (
     <main className="min-h-screen bg-[#09090d] pb-20 pt-28 text-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
-          Saved locally on this device
-        </p>
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+          {isSyncing ? (
+            <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+          ) : storageMode === "cloud" ? (
+            <Cloud className="h-3.5 w-3.5" />
+          ) : (
+            <HardDrive className="h-3.5 w-3.5" />
+          )}
+          {isSyncing
+            ? "Syncing your Reevu library"
+            : storageMode === "cloud"
+              ? "Synced securely to your Reevu account"
+              : "Saved on this device"}
+        </div>
         <h1 className="mt-2 text-4xl font-black tracking-[-0.045em] sm:text-6xl">
           My List
         </h1>

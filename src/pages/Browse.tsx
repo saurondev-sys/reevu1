@@ -23,7 +23,7 @@ const categoryCopy: Record<
   popular: {
     title: "Popular Movies",
     eyebrow: "Crowd favorites",
-    description: "The most popular movies currently being explored on TMDB.",
+    description: "The most popular movies currently being explored on Reevu.",
   },
   "top-rated": {
     title: "Top Rated Movies",

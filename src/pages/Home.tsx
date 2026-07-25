@@ -6,17 +6,22 @@ import { Link } from "react-router-dom";
 import {
   getBackdropUrl,
   getHomeMovies,
-  hasTmdbToken,
 } from "@/api/tmdb";
 import MovieRow, { MovieRowSkeleton } from "@/components/MovieRow";
 import SearchBox from "@/components/SearchBox";
 import { useLibrary } from "@/context/LibraryContext";
+import { getCommunityFeed } from "@/lib/community";
 
 export default function Home() {
   const { toggleWatchlist, isInWatchlist } = useLibrary();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["home-movies"],
     queryFn: getHomeMovies,
+  });
+  const { data: community } = useQuery({
+    queryKey: ["reevu-community"],
+    queryFn: getCommunityFeed,
+    staleTime: 1000 * 60 * 2,
   });
 
   const featured = data?.trending[0];
@@ -95,20 +100,11 @@ export default function Home() {
         </div>
       </section>
 
-      {!hasTmdbToken() && (
-        <div className="mx-auto max-w-7xl px-5 sm:px-6">
-          <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-5 text-sm leading-6 text-amber-100">
-            Add your TMDB Read Access Token to <code>.env</code> as
-            <code className="ml-1">VITE_TMDB_TOKEN</code>, then restart Vite.
-          </div>
-        </div>
-      )}
-
       {isError && (
         <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6">
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-200">
-            Reevu could not reach TMDB. Check the token in your <code>.env</code>
-            file and restart the development server.
+            Reevu’s catalog is temporarily unavailable. Your saved library and
+            community reviews are still safe.
           </div>
         </div>
       )}
@@ -126,6 +122,14 @@ export default function Home() {
 
       {data && (
         <div className="pb-12">
+          {community && community.topMovies.length > 0 && (
+            <MovieRow
+              title="Loved by Reevu members"
+              eyebrow="Our community, our chart"
+              movies={community.topMovies.slice(0, 16)}
+              href="/community"
+            />
+          )}
           <MovieRow
             title="Trending Now"
             eyebrow="This week"
