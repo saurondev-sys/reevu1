@@ -1,6 +1,8 @@
 import {
   Bookmark,
   Cloud,
+  Eye,
+  Film,
   HardDrive,
   Heart,
   LoaderCircle,
@@ -8,12 +10,37 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
+import DeveloperMovieCard from "@/components/DeveloperMovieCard";
 import MovieCard from "@/components/MovieCard";
 import { useLibrary } from "@/context/LibraryContext";
+import {
+  developerFavorites,
+  developerWatched,
+} from "@/data/developerLibrary";
+
+type LibraryTab =
+  | "favorites"
+  | "watchlist"
+  | "developer-favorites"
+  | "developer-watched";
+
+const libraryTabs: LibraryTab[] = [
+  "favorites",
+  "watchlist",
+  "developer-favorites",
+  "developer-watched",
+];
+
+function isLibraryTab(value: string | null): value is LibraryTab {
+  return libraryTabs.includes(value as LibraryTab);
+}
 
 export default function Library() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") === "watchlist" ? "watchlist" : "favorites";
+  const requestedTab = searchParams.get("tab");
+  const activeTab: LibraryTab = isLibraryTab(requestedTab)
+    ? requestedTab
+    : "favorites";
   const {
     favorites,
     watchlist,
@@ -23,8 +50,28 @@ export default function Library() {
     storageMode,
   } = useLibrary();
 
-  const movies = activeTab === "favorites" ? favorites : watchlist;
-  const clear = activeTab === "favorites" ? clearFavorites : clearWatchlist;
+  const isDeveloperTab = activeTab.startsWith("developer-");
+  const personalMovies = activeTab === "watchlist" ? watchlist : favorites;
+  const developerMovies =
+    activeTab === "developer-watched"
+      ? developerWatched
+      : developerFavorites;
+  const activeMovieCount = isDeveloperTab
+    ? developerMovies.length
+    : personalMovies.length;
+  const clear =
+    activeTab === "favorites"
+      ? clearFavorites
+      : activeTab === "watchlist"
+        ? clearWatchlist
+        : null;
+
+  const tabClass = (tab: LibraryTab) =>
+    `inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+      activeTab === tab
+        ? "bg-white text-black"
+        : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+    }`;
 
   return (
     <main className="min-h-screen bg-[#09090d] pb-20 pt-28 text-white">
@@ -48,50 +95,74 @@ export default function Library() {
         </h1>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/8 pb-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setSearchParams({ tab: "favorites" })}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeTab === "favorites"
-                  ? "bg-white text-black"
-                  : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
-              }`}
+              className={tabClass("favorites")}
             >
               <Heart className="h-4 w-4" />
-              Favorites ({favorites.length})
+              My Favorites ({favorites.length})
             </button>
             <button
               type="button"
               onClick={() => setSearchParams({ tab: "watchlist" })}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeTab === "watchlist"
-                  ? "bg-white text-black"
-                  : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
-              }`}
+              className={tabClass("watchlist")}
             >
               <Bookmark className="h-4 w-4" />
-              Watchlist ({watchlist.length})
+              My Watchlist ({watchlist.length})
+            </button>
+            <span className="mx-1 hidden h-7 w-px bg-white/10 sm:block" />
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: "developer-favorites" })}
+              className={tabClass("developer-favorites")}
+            >
+              <Heart className="h-4 w-4" />
+              Developer Favorites ({developerFavorites.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: "developer-watched" })}
+              className={tabClass("developer-watched")}
+            >
+              <Eye className="h-4 w-4" />
+              Developer Watched ({developerWatched.length})
             </button>
           </div>
 
-          {movies.length > 0 && (
+          {clear && activeMovieCount > 0 && (
             <button
               type="button"
               onClick={clear}
               className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-zinc-600 transition hover:bg-red-500/10 hover:text-red-300"
             >
               <Trash2 className="h-4 w-4" />
-              Clear {activeTab}
+              Clear {activeTab === "favorites" ? "favorites" : "watchlist"}
             </button>
           )}
         </div>
 
-        {movies.length > 0 ? (
+        {isDeveloperTab && (
+          <div className="mt-6 flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-4 text-sm leading-6 text-zinc-400">
+            <Film className="mt-0.5 h-5 w-5 shrink-0 text-zinc-300" />
+            <p>
+              Imported from the developer&apos;s Letterboxd export. Ratings use
+              the developer&apos;s five-star score, and each card opens its
+              original Letterboxd film page.
+            </p>
+          </div>
+        )}
+
+        {activeMovieCount > 0 ? (
           <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-9 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} layout="grid" />
-            ))}
+            {isDeveloperTab
+              ? developerMovies.map((movie) => (
+                  <DeveloperMovieCard key={movie.id} movie={movie} />
+                ))
+              : personalMovies.map((movie) => (
+                  <MovieCard key={movie.id} movie={movie} layout="grid" />
+                ))}
           </div>
         ) : (
           <div className="mt-16 rounded-3xl border border-white/8 bg-white/[0.03] px-6 py-16 text-center">

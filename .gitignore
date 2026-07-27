@@ -9,7 +9,13 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-vercel
 dist-ssr
+.next
+.vinext
+.vercel
+.wrangler
+next-env.d.ts
 *.local
 
 # Editor directories and files
@@ -28,4 +34,4 @@ dist-ssr
 .env.*
 !.env.example
 
-/Reevu-Ultra-Final-v3/
+.vercel

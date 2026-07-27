@@ -1,0 +1,13 @@
+.git
+.openai
+.vinext
+.wrangler
+app
+build
+dist
+dist-vercel
+node_modules
+worker
+*.log
+AUTH_SETUP.md
+SUPABASE_*.sql
