@@ -11,6 +11,16 @@ const navItems = [
   { label: "Trending", to: "/browse/trending" },
   { label: "Popular", to: "/browse/popular" },
   { label: "Community", to: "/community" },
+  {
+    label: "Dev Favorites",
+    to: "/library?tab=developer-favorites",
+    tab: "developer-favorites",
+  },
+  {
+    label: "Dev Watched",
+    to: "/library?tab=developer-watched",
+    tab: "developer-watched",
+  },
 ];
 
 export default function Header() {
@@ -18,6 +28,7 @@ export default function Header() {
   const { favorites, watchlist } = useLibrary();
   const { user, profile, isGuest, openSignIn, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const activeLibraryTab = new URLSearchParams(location.search).get("tab");
 
   useEffect(() => {
     setMobileOpen(false);
@@ -36,7 +47,7 @@ export default function Header() {
   const accountEmail = profile?.email ?? user?.email;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-[#08080c]/80 backdrop-blur-2xl">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-black">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-5 px-5 sm:px-6">
         <Link
           to="/"
@@ -44,7 +55,7 @@ export default function Header() {
           aria-label="Reevu home"
         >
           <img
-            src="/reevu-logo.png"
+            src="/reevu-logo-fixed.png"
             alt="Reevu"
             className="header-brand-logo__image"
           />
@@ -58,7 +69,12 @@ export default function Header() {
               end={item.to === "/"}
               className={({ isActive }) =>
                 `rounded-full px-3 py-2 text-sm font-medium transition ${
-                  isActive
+                  item.tab
+                    ? location.pathname === "/library" &&
+                      activeLibraryTab === item.tab
+                      ? "bg-white/10 text-white"
+                      : "text-zinc-500 hover:text-white"
+                    : isActive
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-white"
                 }`
@@ -69,7 +85,7 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto hidden w-full max-w-sm lg:block">
+        <div className="ml-auto hidden w-full max-w-xs 2xl:block">
           <SearchBox />
         </div>
 
@@ -134,7 +150,7 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-white/8 bg-[#08080c]/98 px-5 py-5 lg:hidden">
+        <div className="border-t border-white/8 bg-black px-5 py-5 lg:hidden">
           <div className="mx-auto max-w-7xl">
             <SearchBox />
             <nav className="mt-4 grid gap-1" aria-label="Mobile navigation">
@@ -145,7 +161,12 @@ export default function Header() {
                     to={item.to}
                     className={({ isActive }) =>
                       `rounded-xl px-4 py-3 text-sm font-medium transition ${
-                        isActive
+                        item.tab
+                          ? location.pathname === "/library" &&
+                            activeLibraryTab === item.tab
+                            ? "bg-white/10 text-white"
+                            : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                          : isActive
                           ? "bg-white/10 text-white"
                           : "text-zinc-400 hover:bg-white/5 hover:text-white"
                       }`

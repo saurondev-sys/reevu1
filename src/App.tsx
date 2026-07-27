@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import {
   Navigate,
@@ -48,27 +48,16 @@ interface AuthRouteState {
   requiresAuth?: boolean;
 }
 
-function RequireAuth({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
-  const location = useLocation();
-
-  if (!session) {
-    return (
-      <Navigate
-        to="/auth"
-        replace
-        state={{ from: location, requiresAuth: true } satisfies AuthRouteState}
-      />
-    );
-  }
-
-  return children;
-}
-
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
   const { session, isLoading, isGuest } = useAuth();
   const location = useLocation();
+  const isPublicDeveloperLibrary =
+    location.pathname === "/library" &&
+    new URLSearchParams(location.search)
+      .get("tab")
+      ?.startsWith("developer-") === true;
+  const isPublicMovie = location.pathname.startsWith("/movie/");
 
   if (showIntro) {
     return <IntroVideo onComplete={() => setShowIntro(false)} />;
@@ -92,7 +81,7 @@ export default function App() {
     return <AuthPage />;
   }
 
-  if (!session && !isGuest) {
+  if (!session && !isGuest && !isPublicDeveloperLibrary && !isPublicMovie) {
     return (
       <Navigate
         to="/auth"
@@ -113,14 +102,7 @@ export default function App() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/browse/:category" element={<Browse />} />
         <Route path="/community" element={<Community />} />
-        <Route
-          path="/library"
-          element={
-            <RequireAuth>
-              <Library />
-            </RequireAuth>
-          }
-        />
+        <Route path="/library" element={<Library />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
