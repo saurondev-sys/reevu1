@@ -91,7 +91,7 @@ export default function Header() {
 
         <Link
           to="/library"
-          className="ml-auto hidden items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-white/8 hover:text-white lg:ml-0 lg:flex"
+          className="ml-auto hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-white/8 hover:text-white lg:ml-0 lg:flex"
         >
           <Heart className="h-4 w-4" />
           My List
@@ -131,7 +131,7 @@ export default function Header() {
           <button
             type="button"
             onClick={openSignIn}
-            className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-zinc-200 lg:flex"
+            className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-zinc-200 lg:flex"
           >
             <LogIn className="h-4 w-4" />
             Sign in
