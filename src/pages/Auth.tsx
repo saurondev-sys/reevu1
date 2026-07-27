@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -76,7 +77,10 @@ function SocialButton({
 
 export default function AuthPage() {
   const { continueAsGuest, isConfigured } = useAuth();
-  const [mode, setMode] = useState<AuthMode>("signin");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<AuthMode>(
+    searchParams.get("mode") === "signup" ? "signup" : "signin",
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");

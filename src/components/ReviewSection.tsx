@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Cloud,
   Edit3,
@@ -28,7 +29,9 @@ function formatReviewDate(value: string) {
 }
 
 export default function ReviewSection({ movie }: { movie: Movie }) {
-  const { user, isGuest, openSignIn } = useAuth();
+  const { user, openSignIn } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const ownerId = useMemo(
     () => getReviewOwnerId(user?.id ?? null),
@@ -66,9 +69,24 @@ export default function ReviewSection({ movie }: { movie: Movie }) {
   const authorAvatar =
     (user?.user_metadata.avatar_url as string | undefined) ?? null;
 
+  function redirectGuestToSignUp() {
+    openSignIn();
+    navigate("/auth?mode=signup", {
+      state: {
+        from: location,
+        requiresAuth: true,
+      },
+    });
+  }
+
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
+
+    if (!user) {
+      redirectGuestToSignUp();
+      return;
+    }
 
     if (rating < 1) {
       setMessage("Choose a star rating before publishing.");
@@ -186,7 +204,14 @@ export default function ReviewSection({ movie }: { movie: Movie }) {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setRating(value)}
+                  onClick={() => {
+                    if (!user) {
+                      redirectGuestToSignUp();
+                      return;
+                    }
+
+                    setRating(value);
+                  }}
                   className="rounded-lg p-1.5 text-zinc-700 transition hover:text-amber-300 disabled:cursor-default"
                   aria-label={`${value} star${value === 1 ? "" : "s"}`}
                 >
@@ -214,15 +239,15 @@ export default function ReviewSection({ movie }: { movie: Movie }) {
             </label>
           </fieldset>
 
-          {isGuest && (
+          {!user && (
             <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs leading-5 text-zinc-500">
-              <span>Guest reviews stay on this device.</span>
+              <span>Create an account to rate and review movies.</span>
               <button
                 type="button"
-                onClick={openSignIn}
+                onClick={redirectGuestToSignUp}
                 className="shrink-0 font-semibold text-zinc-300 hover:text-white"
               >
-                Sign in
+                Sign up
               </button>
             </div>
           )}
